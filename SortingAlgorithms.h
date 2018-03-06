@@ -303,11 +303,15 @@ void QuickSort(T* items, int size)
 template<typename V>
 void CountingSort(std::pair<int, V>* items, int size, int maxValue)
 {
-	list<pair<int, V>> L = new list<int, V>[maxValue + 1];
+	// Each bucket holds a vector to allow duplicate keys
+	auto L = new std::vector<std::pair<int, V>>[maxValue + 1];
 
 	// Add items to L based on key
 	for (int i = 0; i < size; ++i)
-		L[items[i].first].append(items[i]);
+	{
+		int key = items[i].first;
+		L[key].push_back(items[i]);
+	}
 
 	int index = 0;
 	for (int i = 0; i < maxValue; ++i)
@@ -315,7 +319,8 @@ void CountingSort(std::pair<int, V>* items, int size, int maxValue)
 		int num = L[i].size();
 		while (num > 0)
 		{
-			items[index] = L[i][L[i].size() - num];
+			int size = L[i].size();
+			items[index] = L[i][size - num];
 			num--;
 			index++;
 		}
