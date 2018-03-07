@@ -120,3 +120,19 @@ void swap(T& a, T& b)
 	b = temp;
 }
 
+// Find Max Key
+// ---------------------------------------------
+template<typename V>
+int FindMaxKey(const std::pair<int, V>* items, int size)
+{
+	int max = items[0].first;
+
+	for (int i = 0; i < size; ++i)
+	{
+		int key = items[i].first;
+		if (key > max)
+			max = key;
+	}
+
+	return max;
+}
