@@ -286,19 +286,22 @@ void QuickSort(T* items, int size)
 //   - Each key fits into a machine word
 // Can sort in linear time, for k = n^O(1) - polynomial in n
 
-
 // Counting Sort
 // ---------------------------------------------
-//  - Mediocre
-//  - Walk through elements and count all the items.
-//  - Sudo Code:
+//  - Mediocre, but used as a sub-routine for Radix.
+//  - Time Complexity: O(n + k)
+//      k = size of key-space (all potential key values)
+//
+//  - Create a large array with a slot for every potential key.
+//  - Add each item to the slot where index == key
+//
+//  Sudo Code:
 //      L = array of k empty lists   // one slot for each potential key value
 //      for j in range(n):           // loop over items to be sorted
 //        L[key(A[j])].append(A[j])  // add item to list at index key in L 
 //      output = []              
 //      for i in range(k):           // loop over elements of L
 //        output.extend(L[i])        // append items at each index to the output
-//   - Time Complexity: O(n + k)
 
 template<typename V>
 void CountingSort(std::pair<int, V>* items, int size, int maxValue)
@@ -314,14 +317,13 @@ void CountingSort(std::pair<int, V>* items, int size, int maxValue)
 	}
 
 	int index = 0;
-	for (int i = 0; i < maxValue; ++i)
+
+	// Loop over every slot in array
+	for (int i = 0; i < maxValue + 1; ++i)
 	{
-		int num = L[i].size();
-		while (num > 0)
+		for (int j = 0; j < L[i].size(); ++j)
 		{
-			int size = L[i].size();
-			items[index] = L[i][size - num];
-			num--;
+			items[index] = L[i][j];
 			index++;
 		}
 	}
@@ -331,22 +333,56 @@ void CountingSort(std::pair<int, V>* items, int size, int maxValue)
 
 // Radix Sort
 // ---------------------------------------------
-//  - Uses Counting Sort as a sub-routine
-//  - Imagine each integer as base b
-//  - Know that the number of digits in key is: d = log_b(k) + 1
-//  - Sudo Code:
+//
+//  - Linear(ish) time sorting using Counting Sort as a basis.
+//  - Time Complexity: O(nlog_n(k)) 
+//      - linear when k is polynomial in n
+//      - see README for more detailed explanation
+//
+//	Sudo Code:
 //      Sort integers by least significant digit  // using counting sort
 //      ...                                       // runs d times
 //      Sort integers by most significant digit   
 //
-//  - Analysis: Each sort takes O(n + b)
-//    Total time: O(n + b) * d = O(n + b) * log_b(k)
-//                minimized when b = Theta(n)
-//                O(nlog_n(k))
-//                when k is polynomial in n, it's linear
 
 template<typename V>
-void RadixSort(std::pair<int, V>* items, int size, int maxValue)
+void CountingSubSort(std::pair<int, V>* items, int size, int exp)
 {
+	// Only need array size of the base we're  in (decimal)
+	auto L = new std::vector<std::pair<int, V>>[10];
 
+	for (int i = 0; i < size; ++i)
+	{
+		// Get relevant digit of key based on exp passed in.
+		int key = (items[i].first / exp) % 10;
+		L[key].push_back(items[i]);
+	}
+
+	int index = 0;
+
+	// Loop over every slot in array
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < L[i].size(); ++j)
+		{
+			items[index] = L[i][j];
+			index++;
+		}
+	}
+
+	delete[] L;
+}
+
+template<typename V>
+void RadixSort(std::pair<int, V>* items, int size)
+{
+	int maxKey = FindMaxKey(items, size);
+	int exp = 1;
+
+	while (maxKey >= exp)
+	{
+		CountingSubSort(items, size, exp);
+		
+		exp *= 10;
+	}
 }
